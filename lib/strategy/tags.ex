@@ -30,6 +30,7 @@ defmodule ClusterEC2.Strategy.Tags do
   | `:ip_to_nodename` | no | defaults to `app_prefix@ip` but can be used to override the nodename |
   | `:polling_interval` | no | Number of milliseconds to wait between polls to the EC2 api. Defaults to 5_000 |
   | `:show_debug` | no | True or false, whether or not to show the debug log. Defaults to true |
+  | `:region` | no | The AWS region to query for instances. If not set, it will attempt to determine the region from the instance metadata. |
   """
 
   use GenServer
@@ -51,7 +52,7 @@ defmodule ClusterEC2.Strategy.Tags do
   def init([%State{} = state]) do
     instance_meta = [
       instance_id: ClusterEC2.local_instance_id(),
-      region: ClusterEC2.instance_region()
+      region: Keyword.get(state.config, :region, ClusterEC2.instance_region())
     ]
 
     state =
@@ -66,7 +67,7 @@ defmodule ClusterEC2.Strategy.Tags do
   def init(opts) do
     instance_meta = [
       instance_id: ClusterEC2.local_instance_id(),
-      region: ClusterEC2.instance_region()
+      region: Keyword.fetch!(opts, :config) |> Keyword.get(:region, ClusterEC2.instance_region())
     ]
 
     state = %State{
